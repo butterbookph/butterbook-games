@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fall Into Letters</title>
+  <style>
+    body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      background: url("fall-background.jpg") no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #question {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 64px;
+      color: white;
+    }
+
+    .choice {
+      position: absolute;
+      font-size: 64px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px 40px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    #choice1 { top: 600px; left: 400px; }
+    #choice2 { top: 600px; left: 800px; }
+    #choice3 { top: 600px; left: 1200px; }
+
+    #feedback {
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      color: white;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="question">Loading...</div>
+  <div id="choice1" class="choice"></div>
+  <div id="choice2" class="choice"></div>
+  <div id="choice3" class="choice"></div>
+  <div id="feedback"></div>
+
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
+
+  <script>
+    // ✅ Your questions array here
+    const questions = [];
+    for (let i = 0; i < 26; i++) {
+      const upper = String.fromCharCode(65 + i); // A–Z
+      const lower = String.fromCharCode(97 + i); // a–z
+      const wrongChoices = [];
+      while (wrongChoices.length < 2) {
+        const rand = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        if (rand !== lower && !wrongChoices.includes(rand)) {
+          wrongChoices.push(rand);
+        }
+      }
+      const choices = shuffle([lower, ...wrongChoices]);
+      questions.push({ question: upper, choices, answer: lower });
+    }
+
+    // ✅ Game logic
+    let currentIndex = 0;
+
+    const qEl = document.getElementById("question");
+    const c1 = document.getElementById("choice1");
+    const c2 = document.getElementById("choice2");
+    const c3 = document.getElementById("choice3");
+    const feedback = document.getElementById("feedback");
+
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    const elements = [c1, c2, c3];
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadQuestion(index) {
+      const q = questions[index];
+      qEl.textContent = `Match: ${q.question}`;
+      elements.forEach((el, i) => {
+        el.textContent = q.choices[i];
+      });
+    }
+
+    function showFeedback(text, color) {
+      feedback.textContent = text;
+      feedback.style.display = "block";
+      feedback.style.color = color;
+      setTimeout(() => {
+        feedback.style.display = "none";
+      }, 1500);
+    }
+
+    elements.forEach(el => {
+      el.addEventListener("click", () => {
+        const selected = el.textContent.trim().toLowerCase();
+        const correct = questions[currentIndex].answer;
+
+        if (selected === correct) {
+          correctSound.pause();
+          correctSound.currentTime = 0;
+          correctSound.play();
+          showFeedback("✅ Correct!", "lightgreen");
+          currentIndex++;
+          if (currentIndex < questions.length) {
+            setTimeout(() => loadQuestion(currentIndex), 1500);
+          } else {
+            qEl.textContent = "🎉 All Done!";
+            elements.forEach(e => e.style.display = "none");
+          }
+        } else {
+          wrongSound.pause();
+          wrongSound.currentTime = 0;
+          wrongSound.play();
+          showFeedback("❌ Try Again", "red");
+        }
+      });
+    });
+
+    loadQuestion(currentIndex);
+  </script>
+</body>
+</html>
