@@ -7,51 +7,48 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
       overflow: hidden;
-      background: black;
+      width: 960px;
+      height: 540px;
     }
 
     #gameContainer {
-      width: 1920px;
-      height: 1080px;
+      width: 960px;
+      height: 540px;
+      position: relative;
       background: url("fall-background.jpg") no-repeat center center;
-      background-size: cover;
-      transform-origin: top left;
-      position: absolute;
-      top: 50%;
-      left: 50%;
+      background-size: 960px 540px;
+      font-family: sans-serif;
     }
 
     #question {
       position: absolute;
-      top: 50px;
+      top: 30px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 64px;
+      font-size: 36px;
       color: white;
     }
 
     .choice {
       position: absolute;
-      font-size: 64px;
+      font-size: 32px;
       background: rgba(255, 255, 255, 0.9);
-      padding: 20px 40px;
-      border-radius: 20px;
+      padding: 10px 20px;
+      border-radius: 12px;
       cursor: pointer;
     }
 
-    #choice1 { top: 600px; left: 400px; }
-    #choice2 { top: 600px; left: 800px; }
-    #choice3 { top: 600px; left: 1200px; }
+    #choice1 { top: 360px; left: 120px; }
+    #choice2 { top: 360px; left: 360px; }
+    #choice3 { top: 360px; left: 600px; }
 
     #feedback {
       position: absolute;
-      top: 140px;
+      top: 100px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 48px;
+      font-size: 28px;
       color: white;
       display: none;
     }
@@ -64,29 +61,16 @@
     <div id="choice2" class="choice"></div>
     <div id="choice3" class="choice"></div>
     <div id="feedback"></div>
+
+    <audio id="correctSound" src="correct.mp3"></audio>
+    <audio id="wrongSound" src="wrong.mp3"></audio>
   </div>
 
-  <audio id="correctSound" src="correct.mp3"></audio>
-  <audio id="wrongSound" src="wrong.mp3"></audio>
-
   <script>
-    // Fit to 980x552 Wix iFrame
-    function scaleGameToFit() {
-      const game = document.getElementById("gameContainer");
-      const scaleX = 980 / 1920;
-      const scaleY = 552 / 1080;
-      const scale = Math.min(scaleX, scaleY);
-      game.style.transform = `translate(-50%, -50%) scale(${scale})`;
-    }
-
-    window.addEventListener("load", scaleGameToFit);
-    window.addEventListener("resize", scaleGameToFit);
-
-    // Generate questions A–Z with lowercase matches
     const questions = [];
     for (let i = 0; i < 26; i++) {
-      const upper = String.fromCharCode(65 + i); // A–Z
-      const lower = String.fromCharCode(97 + i); // a–z
+      const upper = String.fromCharCode(65 + i);
+      const lower = String.fromCharCode(97 + i);
       const wrongChoices = [];
       while (wrongChoices.length < 2) {
         const rand = String.fromCharCode(97 + Math.floor(Math.random() * 26));
