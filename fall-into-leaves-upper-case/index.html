@@ -157,6 +157,8 @@
       questions.push({ question: upper, choices, answer: lower });
     }
 
+  shuffle(questions);
+    
     const qEl = document.getElementById("question");
     const c1 = document.getElementById("choice1");
     const c2 = document.getElementById("choice2");
