@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=960, initial-scale=1.0" />
+  <title>I Spy Shapes Game</title>
+  <link href="https://fonts.cdnfonts.com/css/kg-red-hands" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 960px;
+      height: 600px;
+      font-family: 'KG Red Hands', sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    #progressSection {
+      width: 960px;
+      margin: 10px auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    #progressText {
+      width: 60px;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 400;
+      color: #333;
+    }
+
+    #progressWrapper {
+      flex-grow: 1;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #FEB8E5;
+      transition: width 0.4s ease;
+    }
+
+    #gameContainer {
+      width: 960px;
+      height: 540px;
+      margin: 0 auto;
+      position: relative;
+      padding: 20px;
+      border-radius: 20px;
+      box-sizing: border-box;
+      background-size: cover;
+      background-position: center;
+    }
+
+    #letterDisplay {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #222;
+      background-color: rgba(255,255,255,0.8);
+      padding: 10px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    #imageChoices {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      row-gap: 40px;
+      column-gap: 10px;
+      justify-items: center;
+      align-items: start;
+      padding: 10px;
+      border-radius: 20px;
+      margin-top: 45px; /* 👈 Pushes it down on Y-axis */
+    }
+
+    .choiceImage {
+      width: 130px;
+      height: 130px;
+      object-fit: cover;
+      border: 4px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .choiceImage.selected {
+      border-color: orange;
+    }
+
+    .choiceImage.correct {
+      border-color: green;
+    }
+
+    .choiceImage.wrong {
+      border-color: red;
+    }
+
+    #submitBtn, #retryBtn {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      margin: 5px;
+    }
+
+    #submitBtn {
+      background-color: #4CAF50;
+      color: white;
+      position: absolute;
+      top: 470px;     /* Y-axis */
+      left: 380px;    /* X-axis */
+    }
+
+    #retryBtn {
+      background-color: #f44336;
+      color: white;
+      position: absolute;
+      top: 470px;     /* Y-axis */
+      left: 500px;    /* X-axis */
+    }
+
+    #feedback {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 36px;
+      font-weight: bold;
+      background-color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: none;
+      z-index: 2;
+    }
+
+    #allDoneBox {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      color: black;
+      padding: 30px 60px;
+      border-radius: 20px;
+      font-size: 40px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="progressSection">
+    <div id="progressText">0%</div>
+    <div id="progressWrapper"><div id="progressBar"></div></div>
+  </div>
+
+  <div id="gameContainer">
+    <div id="letterDisplay">Loading...</div>
+    <div id="imageChoices"></div>
+    <button id="submitBtn">Submit</button>
+    <button id="retryBtn">Retry</button>
+    <div id="feedback"></div>
+    <div id="allDoneBox">🎉 You finished all questions!</div>
+  </div>
+
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        background: "images/i-spy-circle.png",
+        images: [
+          { src: "images/ice-cream.png", correct: false },
+          { src: "images/donut.png", correct: true },
+          { src: "images/pencil.png", correct: false },
+          { src: "images/comb.png", correct: false },
+          { src: "images/clock.png", correct: true },
+          { src: "images/button.png", correct: true },
+        ]
+      },
+      {
+        background: "images/i-spy-square.png",
+        images: [
+          { src: "images/shoes.png", correct: false },
+          { src: "images/scissors.png", correct: false },
+          { src: "images/water.png", correct: false },
+          { src: "images/image.png", correct: true },
+          { src: "images/window.png", correct: true },
+          { src: "images/gift.png", correct: true },
+        ]
+      },
+      {
+        background: "images/i-spy-rectangle.png",
+        images: [
+          { src: "images/ruler.png", correct: true },
+          { src: "images/envelope.png", correct: true },
+          { src: "images/piggy-bank.png", correct: false },
+          { src: "images/bag.png", correct: false },
+          { src: "images/keys.png", correct: false },
+          { src: "images/door.png", correct: true },
+        ]
+      },
+      {
+        background: "images/i-spy-triangle.png",
+        images: [
+          { src: "images/hat.png", correct: true },
+          { src: "images/flag.png", correct: true },
+          { src: "images/car.png", correct: false },
+          { src: "images/watermelon.png", correct: true },
+          { src: "images/sofa.png", correct: false },
+          { src: "images/fork.png", correct: false },
+        ]
+      },
+      {
+        background: "images/i-spy-heart.png",
+        images: [
+          { src: "images/shirt.png", correct: false },
+          { src: "images/balloon.png", correct: true },
+          { src: "images/sunglass.png", correct: true },
+          { src: "images/cake.png", correct: true },
+          { src: "images/slippers.png", correct: false },
+          { src: "images/flower.png", correct: false },
+        ]
+      },
+      {
+        background: "images/i-spy-oval.png",
+        images: [
+          { src: "images/egg.png", correct: true },
+          { src: "images/tv.png", correct: false },
+          { src: "images/medicine.png", correct: true },
+          { src: "images/glass.png", correct: true },
+          { src: "images/watch.png", correct: false },
+          { src: "images/bed.png", correct: false },
+        ]
+      },
+      {
+        background: "images/i-spy-diamond.png",
+        images: [
+          { src: "images/kite.png", correct: true },
+          { src: "images/earings.png", correct: true },
+          { src: "images/can.png", correct: false },
+          { src: "images/pillow.png", correct: false },
+          { src: "images/traffic-sign.png", correct: true },
+          { src: "images/sun.png", correct: false },
+        ]
+      },
+      {
+        background: "images/i-spy-star.png",
+        images: [
+          { src: "images/bear.png", correct: false },
+          { src: "images/ladder.png", correct: false },
+          { src: "images/honey.png", correct: false },
+          { src: "images/star.png", correct: true },
+          { src: "images/parole.png", correct: true },
+          { src: "images/starfish.png", correct: true },
+        ]
+      },
+      {
+        background: "images/i-spy-crescent.png",
+        images: [
+          { src: "images/crayon.png", correct: false },
+          { src: "images/crossant.png", correct: true },
+          { src: "images/wallet.png", correct: false },
+          { src: "images/moon.png", correct: true },
+          { src: "images/cookie.png", correct: false },
+          { src: "images/banana.png", correct: true },
+        ]
+      },
+    ];
+
+    let currentIndex = 0;
+    let selectedIndices = [];
+
+    const gameContainer = document.getElementById("gameContainer");
+    const letterDisplay = document.getElementById("letterDisplay");
+    const imageChoices = document.getElementById("imageChoices");
+    const feedback = document.getElementById("feedback");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+    const retryBtn = document.getElementById("retryBtn");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const allDoneBox = document.getElementById("allDoneBox");
+
+    function loadQuestion(index) {
+      const question = questions[index];
+      gameContainer.style.backgroundImage = `url(${question.background})`;
+      letterDisplay.textContent = ""; // optionally set question title
+      imageChoices.innerHTML = '';
+      selectedIndices = [];
+      feedback.style.display = 'none';
+
+      question.images.forEach((imgObj, i) => {
+        const img = document.createElement("img");
+        img.src = imgObj.src;
+        img.classList.add("choiceImage");
+        img.addEventListener("click", () => {
+          if (img.classList.contains("correct") || img.classList.contains("wrong")) return;
+          img.classList.toggle("selected");
+          if (selectedIndices.includes(i)) {
+            selectedIndices = selectedIndices.filter(j => j !== i);
+          } else {
+            selectedIndices.push(i);
+          }
+        });
+        imageChoices.appendChild(img);
+      });
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const percent = Math.floor((currentIndex / questions.length) * 100);
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", () => {
+      const question = questions[currentIndex];
+      let allCorrect = true;
+
+      [...imageChoices.children].forEach((img, i) => {
+        const isSelected = selectedIndices.includes(i);
+        const isCorrect = question.images[i].correct;
+
+        img.classList.remove("correct", "wrong");
+
+        if (isSelected && isCorrect) {
+          img.classList.add("correct");
+        } else if (isSelected && !isCorrect) {
+          img.classList.add("wrong");
+          allCorrect = false;
+        } else if (!isSelected && isCorrect) {
+          allCorrect = false;
+        }
+      });
+
+      if (allCorrect) {
+        correctSound.play();
+        feedback.textContent = "✅ Great job!";
+        feedback.style.color = "darkgreen";
+        feedback.style.display = "block";
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex < questions.length) {
+            loadQuestion(currentIndex);
+          } else {
+            allDoneBox.style.display = "block";
+            letterDisplay.style.display = "none";
+            imageChoices.style.display = "none";
+            document.getElementById("submitBtn").style.display = "none";
+            document.getElementById("retryBtn").style.display = "none";
+          }
+        }, 1500);
+      } else {
+        wrongSound.play();
+        feedback.textContent = "❌ Try again!";
+        feedback.style.color = "orangered";
+        feedback.style.display = "block";
+      }
+    });
+
+    retryBtn.addEventListener("click", () => {
+      selectedIndices = [];
+      [...imageChoices.children].forEach(img => {
+        img.classList.remove("selected", "correct", "wrong");
+      });
+      feedback.style.display = 'none';
+    });
+
+    loadQuestion(currentIndex);
+  </script>
+</body>
+</html>
