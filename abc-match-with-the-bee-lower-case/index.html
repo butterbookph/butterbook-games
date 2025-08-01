@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fall Into Letters</title>
+  <link href="https://fonts.cdnfonts.com/css/kg-red-hands" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    #progressSection {
+      max-width: 960px;
+      width: 100%;
+      margin: 10px auto 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    #progressText {
+      width: 60px;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 400;
+      color: #333;
+    }
+
+    #progressWrapper {
+      flex-grow: 1;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #FEB8E5;
+      transition: width 0.4s ease;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      background: url("ABC Match with the Bee.png") no-repeat center center;
+      background-size: cover;
+      font-weight: 700;
+    }
+
+    #question {
+      position: absolute;
+      top: 65%;
+      left: 43%;
+      transform: translateX(-50%);
+      font-size: clamp(2rem, 8vw, 6rem);
+      color: rgb(255, 255, 255);
+      font-family: 'KG Red Hands', sans-serif;
+      text-shadow:
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px  2px 0 #000,
+        2px  2px 0 #000;
+        text-align: center;
+        z-index: 5;
+    }
+
+    .choice {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: clamp(1.5rem, 5vw, 4rem);
+      color: rgb(255, 255, 255);
+      font-family: 'KG Red Hands', sans-serif;
+      text-shadow:
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px  2px 0 #000,
+        2px  2px 0 #000;
+        text-align: center;
+        z-index: 5;
+    }
+
+      #choice1 { top: 27%; left: 64%; }
+      #choice2 { top: 37%; left: 86%; }
+      #choice3 { top: 68%; left: 70%; }
+
+    #feedback {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: bold;
+      font-family: 'KG Red Hands', sans-serif;
+      background-color: white;
+      padding: 0.5em 1em;
+      border-radius: 10px;
+      display: none;
+      z-index: 20;
+      text-align: center;
+    }
+
+    #allDoneBox {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      color: black;
+      padding: 2em 3em;
+      border-radius: 20px;
+      font-size: clamp(2rem, 5vw, 3rem);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      z-index: 30;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PROGRESS BAR SECTION -->
+  <div id="progressSection">
+    <div id="progressText">0%</div>
+    <div id="progressWrapper">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="gameContainer">
+    <div id="question">Loading...</div>
+    <div id="choice1" class="choice"></div>
+    <div id="choice2" class="choice"></div>
+    <div id="choice3" class="choice"></div>
+    <div id="feedback"></div>
+    <div id="allDoneBox">🎉 All Done!</div>
+
+    <audio id="correctSound" src="correct.mp3"></audio>
+    <audio id="wrongSound" src="wrong.mp3"></audio>
+  </div>
+
+  <script>
+    const questions = [];
+    for (let i = 0; i < 26; i++) {
+      const upper = String.fromCharCode(65 + i);
+      const lower = String.fromCharCode(97 + i);
+      const wrongChoices = [];
+      while (wrongChoices.length < 2) {
+        const rand = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // 65 = A
+        if (rand !== upper && !wrongChoices.includes(rand)) {
+          wrongChoices.push(rand);
+        }
+      }
+      const choices = shuffle([upper, ...wrongChoices]);
+      questions.push({ question: lower, choices, answer: lower });
+    }
+
+  shuffle(questions);
+  
+    const qEl = document.getElementById("question");
+    const c1 = document.getElementById("choice1");
+    const c2 = document.getElementById("choice2");
+    const c3 = document.getElementById("choice3");
+    const feedback = document.getElementById("feedback");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    const elements = [c1, c2, c3];
+    let currentIndex = 0;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadQuestion(index) {
+      const q = questions[index];
+      qEl.textContent = `${q.question}`;
+      elements.forEach((el, i) => {
+        el.textContent = q.choices[i];
+      });
+    }
+
+    function showFeedback(text, color) {
+      feedback.textContent = text;
+      feedback.style.display = "block";
+      feedback.style.color = color;
+      setTimeout(() => {
+        feedback.style.display = "none";
+      }, 1500);
+    }
+
+    function updateProgress() {
+      const percent = Math.floor((currentIndex / questions.length) * 100);
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+    }
+
+    elements.forEach(el => {
+      el.addEventListener("click", () => {
+        const selected = el.textContent.trim().toLowerCase();
+        const correct = questions[currentIndex].answer;
+
+        if (selected === correct) {
+          correctSound.pause();
+          correctSound.currentTime = 0;
+          correctSound.play();
+          showFeedback("✅ Correct!", "darkgreen");
+
+          currentIndex++;
+          updateProgress();
+
+          if (currentIndex < questions.length) {
+            setTimeout(() => loadQuestion(currentIndex), 1500);
+          } else {
+            qEl.style.display = "none";
+            elements.forEach(e => e.style.display = "none");
+            document.getElementById("allDoneBox").style.display = "block";
+          }
+        } else {
+          wrongSound.pause();
+          wrongSound.currentTime = 0;
+          wrongSound.play();
+          showFeedback("❌ Try Again", "orangered");
+        }
+      });
+    });
+
+    loadQuestion(currentIndex);
+    updateProgress();
+  </script>
+</body>
+</html>
