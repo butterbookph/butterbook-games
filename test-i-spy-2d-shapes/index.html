@@ -62,7 +62,8 @@
 
     .imageChoice {
       position: absolute;
-      width: 12%;
+      width: clamp(12%, 10vw, 14%);
+      max-width: 100px;
       height: auto;
       cursor: pointer;
       transition: transform 0.2s;
@@ -84,16 +85,17 @@
 
     #feedback, #allDoneMessage {
       position: absolute;
-      top: 60px;
+      top: 20%;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 36px;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
       font-weight: bold;
+      font-family: 'KG Red Hands', sans-serif;
       background-color: white;
-      padding: 10px 20px;
+      padding: 0.5em 1em;
       border-radius: 10px;
       display: none;
-      z-index: 2;
+      z-index: 20;
       text-align: center;
     }
 
@@ -126,11 +128,12 @@
     }
 
     @media (max-width: 600px) {
-      .imageChoice {
-        width: 18%;
-        border-width: 1vw;
-        border-radius: 4vw;
-      }
+    .imageChoice {
+      width: clamp(16%, 18vw, 20%);
+      max-width: 80px;
+      border-width: 1vw;
+      border-radius: 4vw;
+        }
     }
   </style>
 </head>
