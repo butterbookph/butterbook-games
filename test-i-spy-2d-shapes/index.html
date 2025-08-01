@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>I Spy Shapes Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
       font-family: sans-serif;
       background-color: #f0f0f0;
     }
@@ -78,11 +81,29 @@
       border-color: red !important;
     }
 
+    #feedback, #allDoneMessage {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 36px;
+      font-weight: bold;
+      background-color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: none;
+      z-index: 2;
+      text-align: center;
+    }
+
     #buttons {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
       display: flex;
       justify-content: center;
-      margin: 15px 0;
       gap: 20px;
+      z-index: 1;
     }
 
     button {
@@ -121,12 +142,13 @@
   </div>
 
   <!-- Game Container -->
-  <div id="gameContainer"></div>
-
-  <!-- Buttons -->
-  <div id="buttons">
-    <button id="submitBtn">Submit</button>
-    <button id="retryBtn">Retry</button>
+  <div id="gameContainer">
+    <div id="feedback"></div>
+    <div id="allDoneMessage"></div>
+    <div id="buttons">
+      <button id="submitBtn">Submit</button>
+      <button id="retryBtn">Retry</button>
+    </div>
   </div>
 
   <!-- Sound Effects -->
@@ -157,7 +179,6 @@
           { src: "images/mirror.png", correct: false, top: "70%", left: "15%" }
         ]
       }
-      // Add 7 more questions here
     ];
 
     let currentQuestion = 0;
@@ -165,13 +186,21 @@
     const gameContainer = document.getElementById("gameContainer");
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
+    const feedback = document.getElementById("feedback");
+    const allDoneMessage = document.getElementById("allDoneMessage");
     const correctSound = document.getElementById("correctSound");
     const wrongSound = document.getElementById("wrongSound");
 
     function renderQuestion(index) {
       const q = questions[index];
       gameContainer.style.backgroundImage = `url("${q.background}")`;
-      gameContainer.innerHTML = "";
+
+      allDoneMessage.style.display = "none";
+
+      const others = Array.from(gameContainer.children).filter(
+        el => !["feedback", "buttons", "allDoneMessage"].includes(el.id)
+      );
+      others.forEach(el => gameContainer.removeChild(el));
 
       q.images.forEach((imgData, i) => {
         const img = document.createElement("img");
@@ -218,25 +247,46 @@
       });
 
       if (allCorrect) {
+        showFeedback("✅ Great job!", "green");
         correctSound.pause();
         correctSound.currentTime = 0;
         correctSound.play();
 
         setTimeout(() => {
+          feedback.style.display = "none";
           currentQuestion++;
           if (currentQuestion < questions.length) {
             renderQuestion(currentQuestion);
           } else {
-            gameContainer.innerHTML = `<div style="font-size:2rem; color:darkgreen; text-align:center; padding:2rem;">🎉 All Done!</div>`;
-            progressBar.style.width = `100%`;
-            progressText.textContent = `100%`;
+            showAllDone();
           }
         }, 1500);
       } else {
+        showFeedback("❌ Try again!", "red");
         wrongSound.pause();
         wrongSound.currentTime = 0;
         wrongSound.play();
       }
+    }
+
+    function showFeedback(text, color) {
+      feedback.textContent = text;
+      feedback.style.color = color;
+      feedback.style.display = "block";
+    }
+
+    function showAllDone() {
+      gameContainer.style.backgroundImage = "none";
+      const others = Array.from(gameContainer.children).filter(
+        el => !["allDoneMessage", "buttons"].includes(el.id)
+      );
+      others.forEach(el => gameContainer.removeChild(el));
+
+      allDoneMessage.innerHTML = `🎉 All Done!`;
+      allDoneMessage.style.display = "block";
+      allDoneMessage.style.color = "darkgreen";
+      progressBar.style.width = `100%`;
+      progressText.textContent = `100%`;
     }
 
     function handleRetry() {
@@ -244,6 +294,7 @@
       imgs.forEach(img => {
         img.classList.remove("selected", "correct", "wrong");
       });
+      feedback.style.display = "none";
     }
 
     document.getElementById("submitBtn").addEventListener("click", handleSubmit);
