@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>I Spy Shapes Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    #progressSection {
+      max-width: 960px;
+      width: 100%;
+      margin: 10px auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    #progressText {
+      width: 60px;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 400;
+      color: #333;
+    }
+
+    #progressWrapper {
+      flex-grow: 1;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #FEB8E5;
+      transition: width 0.4s ease;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      background: no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    .imageChoice {
+      position: absolute;
+      width: 15%;
+      cursor: pointer;
+      transition: transform 0.2s;
+      border: 5px solid transparent;
+      border-radius: 20px;
+    }
+
+    .selected {
+      border-color: orange;
+    }
+
+    .correct {
+      border-color: green !important;
+    }
+
+    .wrong {
+      border-color: red !important;
+    }
+
+    #buttons {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+      gap: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #submitBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #retryBtn {
+      background-color: #f44336;
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .imageChoice {
+        width: 20%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progress Bar -->
+  <div id="progressSection">
+    <div id="progressText">0%</div>
+    <div id="progressWrapper">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Game Container -->
+  <div id="gameContainer"></div>
+
+  <!-- Buttons -->
+  <div id="buttons">
+    <button id="submitBtn">Submit</button>
+    <button id="retryBtn">Retry</button>
+  </div>
+
+  <!-- Sound Effects -->
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        background: "Images/i-spy-circle.png",
+        images: [
+          { src: "Images/ice-cream.png", correct: false, top: "50%", left: "20%" },
+          { src: "Images/donut.png", correct: true, top: "30%", left: "60%" },
+          { src: "Images/pencil.png", correct: false, top: "50%", left: "30%" },
+          { src: "Images/comb.png", correct: false, top: "60%", left: "70%" },
+          { src: "Images/clock.png", correct: true, top: "45%", left: "80%" },
+          { src: "Images/button.png", correct: true, top: "70%", left: "20%" }
+        ]
+      },
+      {
+        background: "Images/i-spy-square.png",
+        images: [
+          { src: "Images/book.png", correct: true, top: "20%", left: "30%" },
+          { src: "Images/gift.png", correct: true, top: "35%", left: "55%" },
+          { src: "Images/eraser.png", correct: false, top: "50%", left: "25%" },
+          { src: "Images/clock.png", correct: false, top: "60%", left: "75%" },
+          { src: "Images/present.png", correct: true, top: "45%", left: "70%" },
+          { src: "Images/mirror.png", correct: false, top: "70%", left: "15%" }
+        ]
+      }
+      // Add 7 more questions here
+    ];
+
+    let currentQuestion = 0;
+
+    const gameContainer = document.getElementById("gameContainer");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    function renderQuestion(index) {
+      const q = questions[index];
+      gameContainer.style.backgroundImage = `url("${q.background}")`;
+      gameContainer.innerHTML = "";
+
+      q.images.forEach((imgData, i) => {
+        const img = document.createElement("img");
+        img.src = imgData.src;
+        img.classList.add("imageChoice");
+        img.style.top = imgData.top;
+        img.style.left = imgData.left;
+
+        img.addEventListener("click", () => {
+          img.classList.toggle("selected");
+        });
+
+        gameContainer.appendChild(img);
+      });
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const percent = Math.floor((currentQuestion / questions.length) * 100);
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+    }
+
+    function handleSubmit() {
+      const imgs = document.querySelectorAll(".imageChoice");
+      let allCorrect = true;
+
+      imgs.forEach((img, i) => {
+        const isSelected = img.classList.contains("selected");
+        const isCorrect = questions[currentQuestion].images[i].correct;
+
+        if (isSelected && isCorrect) {
+          img.classList.remove("selected");
+          img.classList.add("correct");
+        } else if (isSelected && !isCorrect) {
+          img.classList.remove("selected");
+          img.classList.add("wrong");
+          allCorrect = false;
+        } else if (!isSelected && isCorrect) {
+          img.classList.add("wrong");
+          allCorrect = false;
+        }
+      });
+
+      if (allCorrect) {
+        correctSound.pause();
+        correctSound.currentTime = 0;
+        correctSound.play();
+
+        setTimeout(() => {
+          currentQuestion++;
+          if (currentQuestion < questions.length) {
+            renderQuestion(currentQuestion);
+          } else {
+            gameContainer.innerHTML = `<div style="font-size:2rem; color:darkgreen; text-align:center; padding:2rem;">🎉 All Done!</div>`;
+            progressBar.style.width = `100%`;
+            progressText.textContent = `100%`;
+          }
+        }, 1500);
+      } else {
+        wrongSound.pause();
+        wrongSound.currentTime = 0;
+        wrongSound.play();
+      }
+    }
+
+    function handleRetry() {
+      const imgs = document.querySelectorAll(".imageChoice");
+      imgs.forEach(img => {
+        img.classList.remove("selected", "correct", "wrong");
+      });
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", handleSubmit);
+    document.getElementById("retryBtn").addEventListener("click", handleRetry);
+
+    renderQuestion(currentQuestion);
+  </script>
+</body>
+</html>
